@@ -1,0 +1,71 @@
+//
+// Created by InnoFang on 2021/4/7.
+//
+
+#ifndef TBC__T_BALANCED_CLUSTERING_H
+#define TBC__T_BALANCED_CLUSTERING_H
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <unordered_map>
+#include <queue>
+#include <climits>
+
+#include "cluster.h"
+
+/*
+struct MaxHeap {
+    bool operator()(const std::pair<int, double> &a, const std::pair<int, double> &b){
+        return a.second == b.second ? a.first < b.first : a.second < b.second;
+    }
+};
+
+class ClusterCenter {
+public:
+    int label;
+    // 簇中心数据值
+    std::vector<double> value;
+    // pair<数据索引，与簇中心的距离>
+    std::priority_queue<std::pair<int, double>, std::vector<std::pair<int,double>>, MaxHeap> cluster;
+//    ClusterCenter(): value(), cluster() {};
+    ClusterCenter(size_t dims): value(dims) {};
+};*/
+
+class TBC {
+public:
+    TBC(const std::vector<std::vector<double>> &data, int clusterNum, unsigned int seed = std::random_device()());
+
+    ~TBC();
+
+    double start();
+
+    void initClusterCenters();
+
+    void initClusters();
+
+    void updateClusterCenters();
+
+    void reassign();
+
+    void assignToNearestCenter(int dataIndex, std::vector<double> &center);
+
+    double distance(const std::vector<double> &data1, const std::vector<double> &data2) const;
+
+    std::vector<int> getAssignments();
+
+private:
+    std::vector<std::vector<double>> data_;              // 原始数据
+//    std::vector<std::vector<double>> clusterCenters;    // 簇中心的数据
+    std::vector<ClusterCenter> clusterCenters;
+    std::vector<int> assignments;                    // 每条数据预测的类别
+    int k_;                                       // k个簇中心
+    size_t size_;                                        // 数据数量
+    size_t dims_;                                        // 数据维度
+    size_t scope_;                                          // 每个簇的数据量有多少
+    std::default_random_engine randomEngine;            // 随机引擎
+};
+
+#endif //TBC__T_BALANCED_CLUSTERING_H
