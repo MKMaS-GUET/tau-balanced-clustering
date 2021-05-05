@@ -13,26 +13,15 @@
 #include <unordered_map>
 #include <queue>
 #include <climits>
+#include <functional>
 
-#include "cluster.h"
-
-/*
-struct MaxHeap {
-    bool operator()(const std::pair<int, double> &a, const std::pair<int, double> &b){
-        return a.second == b.second ? a.first < b.first : a.second < b.second;
-    }
-};
-
-class ClusterCenter {
-public:
+struct ClusterCenter {
     int label;
     // 簇中心数据值
     std::vector<double> value;
     // pair<数据索引，与簇中心的距离>
-    std::priority_queue<std::pair<int, double>, std::vector<std::pair<int,double>>, MaxHeap> cluster;
-//    ClusterCenter(): value(), cluster() {};
-    ClusterCenter(size_t dims): value(dims) {};
-};*/
+    std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::less<std::pair<double, int>>> cluster;
+};
 
 class TBC {
 public:
