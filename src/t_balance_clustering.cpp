@@ -13,17 +13,10 @@ TBC::~TBC() {
 }
 
 double TBC::start() {
-//    initClusters();
     initClusterCenters();
     for (int i = 1;; ++i) {
-//        std::cout << "iteration " << i << std::endl;
         std::vector<int> oldAssignment(assignments);
         reassign();
-//        for (const auto &item : clusterCenters) {
-//            std::cout << item.label << " 's cluster size is " << item.cluster.size() << std::endl;
-//            std::cout << item.label << " 's value[0] is " << item.value[0] << std::endl;
-//        }
-//        std::cout << "\n" << std::endl;
         updateClusterCenters();
         if (oldAssignment == assignments || i > 20) {
             break;
@@ -39,35 +32,16 @@ void TBC::initClusterCenters() {
     }
     std::shuffle(indices.begin(), indices.end(), std::mt19937(randomEngine));
 
-//    clusterCenters.resize(k_);
-//    clusterCenters = std::vector<ClusterCenter*>(k_, new ClusterCenter(dims_));
     clusterCenters.resize(k_);
-//    clusterCenters.assign(k_, ClusterCenter(dims_));
     for (int i = 0; i < k_; ++i) {
-//        ClusterCenter clusterCenter(dims_);
-//        ClusterCenter clusterCenter;
         clusterCenters[i].label = i;
         auto ith = data_[indices[i]];
         clusterCenters[i].value.resize(dims_);
         std::copy(ith.begin(), ith.end(), clusterCenters[i].value.begin());
-//        clusterCenters[i] = clusterCenter;
-//        clusterCenters[i].value = data_[indices[i]];
-    }
-
-    // 注释了 initClusters 方法就需要使用这一行，给分配初始化
-//    assignments.resize(size_); // 不用了，现在在 reassign() 函数里每次清空
-}
-
-void TBC::initClusters() {
-    assignments.resize(size_);
-    std::uniform_int_distribution<int> rand(0, k_ - 1);
-    for (int i = 0; i < size_; ++i) {
-        assignments[i] = rand(randomEngine);
     }
 }
 
 void TBC::reassign() {
-//    clusterCenters = std::vector<ClusterCenter>(k_, ClusterCenter(dims_));
     assignments.assign(size_, 0);
     for (int i = 0; i < size_; ++i) {
         assignToNearestCenter(i, data_[i]);
@@ -75,23 +49,6 @@ void TBC::reassign() {
 }
 
 void TBC::updateClusterCenters() {
-    /*
-    // 修改为根据 ClusterCenter 来更新簇中心数组
-    std::vector<int> clusterSize(k_, 0);
-    for (int i = 0; i < size_; ++i) {
-        clusterSize[assignments[i]]++;
-        for (int j = 0; j < dims_; ++j) {
-            clusterCenters[assignments[i]].value[j] += data_[i][j];
-        }
-    }
-    for (int i = 0; i < k_; ++i) {
-        if (clusterSize[i] > 0) {
-            for (auto &attr: clusterCenters[i].value) {
-                attr = attr / clusterSize[i];
-            }
-        }
-    }
-     */
     // 1. 先取得 ClusterCenter.clusters 的长度
     // 2. 再对 ClusterCenter.clusters 每个维度的值求和
     // 3. 再除以数据长度并更新 ClusterCenter.value
@@ -144,23 +101,6 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
         nearestClusters.push(std::make_pair(dist, i));
     }
 
-//        // 不使用以上的 优先队列 来获得最小值，直接判断
-//        double minDistance = distance(clusterCenters[0].value, dataItem);
-//        ClusterCenter minClusterCenter = clusterCenters[0];
-//        for (int i = 1; i < clusterCenters.size(); ++ i) {
-//            double dist = distance(clusterCenters[i].value, dataItem);
-//            if (dist < minDistance) {
-//                minDistance = dist;
-//                minClusterCenter = clusterCenters[i];
-//            }
-//        }
-//    for(auto& clusterCenter: clusterCenters) {
-//        if (nearestClusters.top().second == clusterCenter) {
-//            std::cout << "same: " << clusterCenter.label << std::endl;
-//        }
-//    }
-    // 检查 nearestClusters 是不是空的 (通过实现 ClusterCenter 的拷贝构造函数解决)
-    // 为什么 push 过后，cluster 仍然是空的
     while (!nearestClusters.empty()) {
         // 每次取得最小的点
         double dist = nearestClusters.top().first;
@@ -210,4 +150,3 @@ double TBC::distance(const std::vector<double> &data1, const std::vector<double>
 std::vector<int> TBC::getAssignments() {
     return assignments;
 }
-
