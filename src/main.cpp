@@ -39,16 +39,17 @@ void writeAssignment(const std::string &filepath, const std::vector<int> &assign
 int main(int argc, char *argv[]) {
     // tbc.exe <input> <cluster> <seed> <output>
     if (argc < 5) {
-        std::cerr << "./tbc <input> <cluster> <seed> <output>" << std::endl;
+        std::cerr << "./tbc <input> <output> <k> <tau> <seed>" << std::endl;
         exit(0);
     }
     std::string filepath = argv[1];
-    int cluster = atoi(argv[2]);
-    unsigned int seed = atoi(argv[3]);
-    std::string outputPath = argv[4];
+    std::string outputPath = argv[2];
+    int cluster = atoi(argv[3]);
+    int tau = atoi(argv[4]);
+    unsigned int seed = atoi(argv[5]);
 
     auto data = readCSV(filepath);
-    TBC *tbc = new TBC(data, cluster, seed);
+    TBC *tbc = new TBC(data, cluster, tau, seed);
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
