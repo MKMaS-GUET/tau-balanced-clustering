@@ -33,17 +33,17 @@ public:
     void reassign();
     void assignToNearestCenter(int dataIndex, std::vector<double> &center);
     double distance(const std::vector<double> &data1, const std::vector<double> &data2) const;
-    std::vector<int> getAssignments();
+    std::vector<int> getAssignments() const;
 
 private:
     std::vector<std::vector<double>> data_;       // 原始数据
-    std::vector<ClusterCenter> clusterCenters;    // 簇中心的数据
-    std::vector<int> assignments;                 // 每条数据预测的类别
+    std::vector<ClusterCenter> cluster_centers_;    // 簇中心的数据
+    std::vector<int> assignments_;                 // 每条数据预测的类别
     int k_;                                       // k个簇中心
     size_t size_;                                 // 数据数量
     size_t dims_;                                 // 数据维度
     size_t bound_;                                // 每个簇的数据量有多少
-    std::default_random_engine randomEngine;      // 随机引擎
+    std::default_random_engine random_engine_;      // 随机引擎
 };
 
 #endif //TBC__T_BALANCED_CLUSTERING_H

@@ -6,18 +6,16 @@ TBC::TBC(const std::vector<std::vector<double>> &data, int k, int tau, unsigned 
           size_(data.size()),
           dims_(data.front().size()),
           bound_((size_ - tau) / k_ + tau),
-          randomEngine(seed) {}
+          random_engine_(seed) {}
 
-TBC::~TBC() {
-
-}
+TBC::~TBC() = default;
 
 double TBC::start() {
     initClusterCenters();
     for (int i = 1;; ++i) {
-        std::vector<int> oldAssignment(assignments);
+        std::vector<int> oldAssignment(assignments_);
         reassign();
-        if (oldAssignment == assignments || i > 20) {
+        if (oldAssignment == assignments_ || i > 20) {
             break;
         }
         updateClusterCenters();
@@ -30,19 +28,19 @@ void TBC::initClusterCenters() {
     for (size_t i = 0; i < size_; ++i) {
         indices[i] = i;
     }
-    std::shuffle(indices.begin(), indices.end(), std::mt19937(randomEngine));
+    std::shuffle(indices.begin(), indices.end(), std::mt19937(random_engine_));
 
-    clusterCenters.resize(k_);
+    cluster_centers_.resize(k_);
     for (int i = 0; i < k_; ++i) {
-        clusterCenters[i].label = i;
+        cluster_centers_[i].label = i;
         auto ith = data_[indices[i]];
-        clusterCenters[i].value.resize(dims_);
-        std::copy(ith.begin(), ith.end(), clusterCenters[i].value.begin());
+        cluster_centers_[i].value.resize(dims_);
+        std::copy(ith.begin(), ith.end(), cluster_centers_[i].value.begin());
     }
 }
 
 void TBC::reassign() {
-    assignments.assign(size_, 0);
+    assignments_.assign(size_, 0);
     for (int i = 0; i < size_; ++i) {
         assignToNearestCenter(i, data_[i]);
     }
@@ -52,23 +50,23 @@ void TBC::updateClusterCenters() {
     // 1. 先取得 ClusterCenter.clusters 的长度
     // 2. 再对 ClusterCenter.clusters 每个维度的值求和
     // 3. 再除以数据长度并更新 ClusterCenter.value
-    for (auto& clusterCenter: clusterCenters) {
+    for (auto& cluster_center: cluster_centers_) {
         // 1.
-        size_t clusterSize = clusterCenter.cluster.size();
+        size_t clusterSize = cluster_center.cluster.size();
         // 2.
         std::vector<double> newClusterValue(dims_);
-        while (!clusterCenter.cluster.empty()) {
-            std::pair<double, int> distIdxPair = clusterCenter.cluster.top();
+        while (!cluster_center.cluster.empty()) {
+            std::pair<double, int> distIdxPair = cluster_center.cluster.top();
             std::vector<double> dataValue = data_[distIdxPair.second];
             for (int i = 0; i < dims_; ++i) {
                 newClusterValue[i] += dataValue[i];
             }
-            clusterCenter.cluster.pop();
+            cluster_center.cluster.pop();
         }
         // 3.
         if (clusterSize > 0) { // !!! 一定要判断，否则会出现 -nan(ind)
             for (int i = 0; i < dims_; ++i) {
-                clusterCenter.value[i] = newClusterValue[i] / double(clusterSize);
+                cluster_center.value[i] = newClusterValue[i] / double(clusterSize);
             }
         }
     }
@@ -92,9 +90,9 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
     // 所以考虑将存储格式更改为 <数据与簇中心的距离，ClusterCenter 的索引 id>
     std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> nearestClusters;
 
-    for (int i = 0; i < clusterCenters.size(); ++ i) {
+    for (int i = 0; i < cluster_centers_.size(); ++ i) {
         // 计算数据点与簇中心的距离
-        double dist = distance(clusterCenters[i].value, dataItem);
+        double dist = distance(cluster_centers_[i].value, dataItem);
         // 将数据点与簇中心构成的 <与簇中心距离, 簇中心> 对加入最小堆
 //        std::pair<double, ClusterCenter> dist2cluster(dist, clusterCenter);
 //        nearestClusters.push( dist2cluster );
@@ -106,12 +104,12 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
         // 每次取得最小的点
         double dist = nearestClusters.top().first;
         int nearestIdx = nearestClusters.top().second;
-        ClusterCenter &nearest = clusterCenters[nearestIdx];
+        ClusterCenter &nearest = cluster_centers_[nearestIdx];
 //        std::cout << "cluster size: " << nearest.cluster.size() << std::endl;
         // 如果距离最近的簇还未满，则将该点加入到该簇中
         if (nearest.cluster.size() <= bound_) {
             nearest.cluster.push(std::make_pair(dist, dataIndex));
-            assignments[dataIndex] = nearest.label;
+            assignments_[dataIndex] = nearest.label;
             return;
 //            return std::vector<double>();
         } else {
@@ -127,7 +125,7 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
                 nearest.cluster.pop();
                 // 并加入新的点
                 nearest.cluster.push(std::make_pair(dist, dataIndex));
-                assignments[dataIndex] = nearest.label;
+                assignments_[dataIndex] = nearest.label;
                 // 返回被踢出的数据点，一遍进行
                 // !! 感觉根本不用返回，
 //            return data_[boundary.first];
@@ -139,7 +137,6 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
     }
 }
 
-
 double TBC::distance(const std::vector<double> &data1, const std::vector<double> &data2) const {
     double result = 0.0;
     for (int i = 0; i < dims_; ++i) {
@@ -148,6 +145,6 @@ double TBC::distance(const std::vector<double> &data1, const std::vector<double>
     return result;
 }
 
-std::vector<int> TBC::getAssignments() {
-    return assignments;
+std::vector<int> TBC::getAssignments() const {
+    return assignments_;
 }
