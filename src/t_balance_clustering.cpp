@@ -1,4 +1,4 @@
-#include "t_balanced_clustering.h"
+#include "t_balance_clustering.h"
 
 TBC::TBC(const std::vector<std::vector<double>> &data, int k, int tau, unsigned int seed)
         : data_(data),
@@ -24,11 +24,11 @@ double TBC::start() {
 }
 
 void TBC::initClusterCenters() {
-    std::vector<int> indices(size_);
+    std::vector<size_t> indices(size_);
     for (size_t i = 0; i < size_; ++i) {
         indices[i] = i;
     }
-    std::shuffle(indices.begin(), indices.end(), std::mt19937(random_engine_));
+    std::shuffle(indices.begin(), indices.end(), random_engine_);
 
     cluster_centers_.resize(k_);
     for (int i = 0; i < k_; ++i) {
@@ -105,7 +105,6 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
         double dist = nearestClusters.top().first;
         int nearestIdx = nearestClusters.top().second;
         ClusterCenter &nearest = cluster_centers_[nearestIdx];
-//        std::cout << "cluster size: " << nearest.cluster.size() << std::endl;
         // 如果距离最近的簇还未满，则将该点加入到该簇中
         if (nearest.cluster.size() <= bound_) {
             nearest.cluster.push(std::make_pair(dist, dataIndex));
