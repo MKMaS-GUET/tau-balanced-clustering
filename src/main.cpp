@@ -1,12 +1,16 @@
-#include <iostream>
+#include <map>
 #include <vector>
+#include <chrono>
 #include <sstream>
 #include <fstream>
-#include <map>
-#include <chrono>
-#include "t_balanced_clustering.h"
+#include <iostream>
+#include "t_balance_clustering.h"
 
 static const auto io_speed_up = [] {
+    std::istringstream::sync_with_stdio(false);
+    std::ostringstream::sync_with_stdio(false);
+    std::ifstream::sync_with_stdio(false);
+    std::ofstream::sync_with_stdio(false);
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
@@ -37,18 +41,25 @@ void writeAssignment(const std::string &filepath, const std::vector<int> &assign
 }
 
 int main(int argc, char *argv[]) {
-    // tbc.exe <input> <cluster> <seed> <output>
-    if (argc < 5) {
-        std::cerr << "./tbc <input> <output> <k> <tau> <seed>" << std::endl;
+    /* ' ./tbc <input> <output> <k> <tau> [seed] ' */
+    if (argc < 5 || argc > 6) {
+        std::cerr << "./tbc <input> <output> <k> <tau> [seed]" << std::endl;
         exit(0);
     }
+
     std::string filepath = argv[1];
     std::string outputPath = argv[2];
-    int cluster = atoi(argv[3]);
-    int tau = atoi(argv[4]);
-    unsigned int seed = atoi(argv[5]);
+    int cluster = std::strtol(argv[3], nullptr, 10);
+    int tau = std::strtol(argv[4], nullptr, 10);
+    unsigned int seed = (argc == 6) ? std::strtol(argv[5], nullptr, 10)
+                                    : std::chrono::system_clock::now().time_since_epoch().count();
 
     auto data = readCSV(filepath);
+    if (data.empty()) {
+        std::cerr << "After loading, the data is empty, please check the 'filepath' you input" << std::endl;
+        exit(0);
+    }
+
     TBC *tbc = new TBC(data, cluster, tau, seed);
 
     auto start_time = std::chrono::high_resolution_clock::now();
