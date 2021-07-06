@@ -12,7 +12,7 @@ TBC::~TBC() = default;
 
 double TBC::start() {
     initClusterCenters();
-    for (int i = 1;; ++i) {
+    for (int i = 1;; ++ i) {
         std::vector<int> oldAssignment(assignments_);
         reassign();
         if (oldAssignment == assignments_ || i > 20) {
@@ -47,13 +47,10 @@ void TBC::reassign() {
 }
 
 void TBC::updateClusterCenters() {
-    // 1. 先取得 ClusterCenter.clusters 的长度
-    // 2. 再对 ClusterCenter.clusters 每个维度的值求和
-    // 3. 再除以数据长度并更新 ClusterCenter.value
     for (auto& cluster_center: cluster_centers_) {
-        // 1.
+        // 1. get the data size in the cluster
         size_t clusterSize = cluster_center.cluster.size();
-        // 2.
+        // 2. sum the values of each dimension in the cluster
         std::vector<double> newClusterValue(dims_);
         while (!cluster_center.cluster.empty()) {
             std::pair<double, int> distIdxPair = cluster_center.cluster.top();
@@ -63,8 +60,8 @@ void TBC::updateClusterCenters() {
             }
             cluster_center.cluster.pop();
         }
-        // 3.
-        if (clusterSize > 0) { // !!! 一定要判断，否则会出现 -nan(ind)
+        // 3. divide by the length of the data and update the value of the cluster
+        if (clusterSize > 0) { // check the size of the cluster is essential, or '-nan(ind)' will be occurred
             for (int i = 0; i < dims_; ++i) {
                 cluster_center.value[i] = newClusterValue[i] / double(clusterSize);
             }
@@ -73,61 +70,40 @@ void TBC::updateClusterCenters() {
 }
 
 void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
-
-    /**
-     * 每个簇中心维护一个最大堆，堆顶元素即簇边界
-     * 计算每个簇与自己中心点的距离，使用
-     * priority_queue<pair<数据索引, 与簇中心的距离>>
-     *
-     * 计算每个数据点计算与每个簇中心的距离，使用最小堆存储数据点对 <数据索引, 与簇中心的距离>
-     * 然后从小到大判断数据点是否可以加入簇（条件为簇未满）
-     * 如果簇已经达到节点个数上限，则并与簇的边界比较，如过比边界小则提出原来的边界，加入当前节点
-     */
-
-//    std::priority_queue<std::pair<double, ClusterCenter>, std::vector<std::pair<double, ClusterCenter>>, MinHeap> nearestClusters;
-    // 每次使用 make_pair 好像都会拷贝 CLusterCenter，但是里面的 vector 和 priority_queue 无法直接拷贝，
-    // 特别因为 priority_queue 的特性，拷贝可能会需要清空原对象的 cluster，而这里存储 ClusterCenter 的指针也不可以，
-    // 所以考虑将存储格式更改为 <数据与簇中心的距离，ClusterCenter 的索引 id>
+    // Use min-heap to store pairs ( <distance from the cluster center, data> )
+    // can easily get the nearest cluster center for the current data
     std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> nearestClusters;
 
     for (int i = 0; i < cluster_centers_.size(); ++ i) {
-        // 计算数据点与簇中心的距离
+        // Calculate the distance between data and cluster center
         double dist = distance(cluster_centers_[i].value, dataItem);
-        // 将数据点与簇中心构成的 <与簇中心距离, 簇中心> 对加入最小堆
-//        std::pair<double, ClusterCenter> dist2cluster(dist, clusterCenter);
-//        nearestClusters.push( dist2cluster );
-        nearestClusters.push(std::make_pair(dist, i));
+        // Push the pair <distance from cluster center, data> into min-heap
+        nearestClusters.push( std::make_pair(dist, i) );
     }
-    // 检查 nearestClusters 是不是空的 (通过实现 ClusterCenter 的拷贝构造函数解决)
-    // 为什么 push 过后，cluster 仍然是空的
     while (!nearestClusters.empty()) {
-        // 每次取得最小的点
         double dist = nearestClusters.top().first;
         int nearestIdx = nearestClusters.top().second;
         ClusterCenter &nearest = cluster_centers_[nearestIdx];
-        // 如果距离最近的簇还未满，则将该点加入到该簇中
+        // If the nearest cluster is not full, the data is added to the cluster
         if (nearest.cluster.size() <= bound_) {
             nearest.cluster.push(std::make_pair(dist, dataIndex));
             assignments_[dataIndex] = nearest.label;
             return;
-//            return std::vector<double>();
         } else {
-            // 如果中心点所包含的节点个数达到上限
-            // 检查边界节点 和 当前节点距离中心点的距离
+            // If the number of data in the cluster reaches the upper limit of the boundary,
+            // compare the distance between the boundary data and the center
+            // and the distance between the current data and the center
 
-            // 取得边界点的索引和与簇中心的距离
+            // Firstly, get boundary data's index and distance from the cluster center
             std::pair<double, int> boundary = nearest.cluster.top();
 
-            // 如果边界点比当前点远，
+            // If the boundary data is farther than the current data
             if (boundary.first > dist) {
-                // 则将边界点踢出当前簇
+                // kick out the boundary data from the cluster
                 nearest.cluster.pop();
-                // 并加入新的点
+                // and add the current data
                 nearest.cluster.push(std::make_pair(dist, dataIndex));
                 assignments_[dataIndex] = nearest.label;
-                // 返回被踢出的数据点，一遍进行
-                // !! 感觉根本不用返回，
-//            return data_[boundary.first];
                 assignToNearestCenter(boundary.second, data_[boundary.second]);
                 return;
             }
