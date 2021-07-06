@@ -1,4 +1,6 @@
-# τ-balance-clustering
+# τ-balanced-clustering
+
+Generating Clusters of Similar Sizes by Constrained  Balanced Clustering
 
 ## Build
 
