@@ -2,8 +2,8 @@
 // Created by InnoFang on 2021/4/7.
 //
 
-#ifndef TBC__T_BALANCED_CLUSTERING_H
-#define TBC__T_BALANCED_CLUSTERING_H
+#ifndef TBC__TAU_BALANCED_CLUSTERING_H
+#define TBC__TAU_BALANCED_CLUSTERING_H
 
 #include <queue>
 #include <string>
@@ -17,9 +17,10 @@
 
 struct ClusterCenter {
     int label;
-    // 簇中心数据值
+    // the value of cluster center
     std::vector<double> value;
-    // pair<数据索引，与簇中心的距离>
+    // pair<data index, the distance between data and cluster center>
+    // Use max-heap to store the pairs can easily get the boundary data of this cluster
     std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::less<std::pair<double, int>>> cluster;
 };
 
@@ -36,14 +37,14 @@ public:
     std::vector<int> getAssignments() const;
 
 private:
-    int k_;                                       // k个簇中心
-    size_t size_;                                 // 数据数量
-    size_t dims_;                                 // 数据维度
-    size_t bound_;                                // 每个簇的数据量有多少
-    std::vector<int> assignments_;                // 每条数据预测的类别
-    std::vector<std::vector<double>> data_;       // 原始数据
-    std::vector<ClusterCenter> cluster_centers_;  // 簇中心的数据
-    std::default_random_engine random_engine_;    // 随机引擎
+    int k_;                                       // k clusters
+    size_t size_;                                 // data size
+    size_t dims_;                                 // data attribution dimension
+    size_t bound_;                                // the max bound of cluster
+    std::vector<int> assignments_;                // the cluster assignment of all data
+    std::vector<std::vector<double>> data_;       // raw data
+    std::vector<ClusterCenter> cluster_centers_;  // store the k cluster center
+    std::default_random_engine random_engine_;    // for shuffle raw data
 };
 
-#endif //TBC__T_BALANCED_CLUSTERING_H
+#endif //TBC__TAU_BALANCED_CLUSTERING_H
