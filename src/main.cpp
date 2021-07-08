@@ -4,7 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include "t_balance_clustering.h"
+#include "tau_balanced_clustering.hpp"
 
 static const auto io_speed_up = [] {
     std::istringstream::sync_with_stdio(false);
