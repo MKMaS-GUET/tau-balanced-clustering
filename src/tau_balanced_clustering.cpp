@@ -1,4 +1,4 @@
-#include "t_balance_clustering.h"
+#include "tau_balanced_clustering.hpp"
 
 TBC::TBC(const std::vector<std::vector<double>> &data, int k, int tau, unsigned int seed)
         : data_(data),
