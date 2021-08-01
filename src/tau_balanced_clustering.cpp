@@ -72,13 +72,14 @@ void TBC::updateClusterCenters() {
 void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
     // Use min-heap to store pairs ( <distance from the cluster center, data> )
     // can easily get the nearest cluster center for the current data
-    std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, std::greater<std::pair<double, int>>> nearestClusters;
+    using pdi = std::pair<double, int>;
+    std::priority_queue<pdi, std::vector<pdi>, std::greater<pdi>> nearestClusters;
 
     for (int i = 0; i < cluster_centers_.size(); ++ i) {
         // Calculate the distance between data and cluster center
         double dist = distance(cluster_centers_[i].value, dataItem);
         // Push the pair <distance from cluster center, data> into min-heap
-        nearestClusters.push( std::make_pair(dist, i) );
+        nearestClusters.push( {dist, i} );
     }
     while (!nearestClusters.empty()) {
         double dist = nearestClusters.top().first;
