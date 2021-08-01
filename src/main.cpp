@@ -7,10 +7,8 @@
 #include "tau_balanced_clustering.hpp"
 
 static const auto io_speed_up = [] {
-    std::istringstream::sync_with_stdio(false);
-    std::ostringstream::sync_with_stdio(false);
-    std::ifstream::sync_with_stdio(false);
-    std::ofstream::sync_with_stdio(false);
+    std::stringstream::sync_with_stdio(false);
+    std::fstream::sync_with_stdio(false);
     std::ios::sync_with_stdio(false);
     std::cin.tie(nullptr);
     std::cout.tie(nullptr);
