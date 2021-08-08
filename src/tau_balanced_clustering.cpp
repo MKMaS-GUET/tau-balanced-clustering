@@ -53,7 +53,7 @@ void TBC::updateClusterCenters() {
         // 2. sum the values of each dimension in the cluster
         std::vector<double> newClusterValue(dims_);
         while (!cluster_center.cluster.empty()) {
-            std::pair<double, int> distIdxPair = cluster_center.cluster.top();
+            tbc::pdi distIdxPair = cluster_center.cluster.top();
             std::vector<double> dataValue = data_[distIdxPair.second];
             for (int i = 0; i < dims_; ++i) {
                 newClusterValue[i] += dataValue[i];
@@ -72,8 +72,7 @@ void TBC::updateClusterCenters() {
 void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
     // Use min-heap to store pairs ( <distance from the cluster center, data> )
     // can easily get the nearest cluster center for the current data
-    using pdi = std::pair<double, int>;
-    std::priority_queue<pdi, std::vector<pdi>, std::greater<pdi>> nearestClusters;
+    std::priority_queue<tbc::pdi, std::vector<tbc::pdi>, std::greater<tbc::pdi>> nearestClusters;
 
     for (int i = 0; i < cluster_centers_.size(); ++ i) {
         // Calculate the distance between data and cluster center
@@ -84,7 +83,7 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
     while (!nearestClusters.empty()) {
         double dist = nearestClusters.top().first;
         int nearestIdx = nearestClusters.top().second;
-        ClusterCenter &nearest = cluster_centers_[nearestIdx];
+        tbc::ClusterCenter &nearest = cluster_centers_[nearestIdx];
         // If the nearest cluster is not full, the data is added to the cluster
         if (nearest.cluster.size() <= bound_) {
             nearest.cluster.push(std::make_pair(dist, dataIndex));
@@ -96,7 +95,7 @@ void TBC::assignToNearestCenter(int dataIndex, std::vector<double> &dataItem) {
             // and the distance between the current data and the center
 
             // Firstly, get boundary data's index and distance from the cluster center
-            std::pair<double, int> boundary = nearest.cluster.top();
+            tbc::pdi boundary = nearest.cluster.top();
 
             // If the boundary data is farther than the current data
             if (boundary.first > dist) {
